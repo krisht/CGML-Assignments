@@ -1,38 +1,33 @@
-"""Program for Gaussian RDF Regression
 
-First homework for Computation Graphs for ML
-with Professor Chris Curro. An implementation
-of Gaussian Radial Basis Function Regression
+# coding: utf-8
 
-Variables:
-	N {Integer} -- Number of Samples
-	M {Integer} -- Number of Basis Functions
-	runs {Integer} -- Number of iterations
-	rateLearn {Float} -- Learning rate
-	regConst {Float} -- Regularization constant
-	sigmaNoise {number} -- Std. Dev. of noise on function
-	muNoise {number} -- Mean of noise on function
-"""
+# # Program for Gaussian Radial Basis Function Regression
+# ## Krishna Thiyagarajan
+# ## ECE - 411 - Computational Graphs for Machine Learning
+# ## Professor Chris Curro
+# ## Homework Assignment #1
+# ## January 29, 2017
+
+# In[1]:
 
 import tensorflow as tf
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-
-#font = {'family' : 'Adobe Caslon Pro',
-#        'size'   : 10}
-
-#matplotlib.rc('font', **font)
-#
-
 N = 50; # Number of samples
-M = 6;  # Hyper parameters
+#Hyper parameters
+M = 6;
 runs = 100; 
 rateLearn = 1e-2;
 regConst = 0; 
 sigmaNoise = 0.1
 muNoise = 0
+
+
+# In[2]:
+
+#Floating functions 
 
 def origFunc(x):
 	return np.sin(2 * np.pi * x);
@@ -55,8 +50,11 @@ def defVariable(shape, name):
         tf.add_to_collection('modelVars', var)
         tf.add_to_collection('l2', tf.reduce_sum(tf.pow(var,2)))
         return var
-    
-class GaussianRDFModel():
+
+
+# In[3]:
+
+class GaussianRBFModel():
     def __init__(self, sess, data, iterations, learnRate, gamma):
         self.sess = sess
         self.data = data
@@ -105,8 +103,11 @@ class GaussianRDFModel():
     	#print(x, y);
     	return y; 
 
+
+# In[4]:
+
 sess = tf.Session()
-model = GaussianRDFModel(sess, data, iterations=runs, learnRate=rateLearn, gamma=regConst)
+model = GaussianRBFModel(sess, data, iterations=runs, learnRate=rateLearn, gamma=regConst)
 model.initTrainer()
 model.train()
 
@@ -121,6 +122,9 @@ print("μ =", mu);
 print("σ =", sigma); 
 print("b =", b); 
 
+
+# In[5]:
+
 x_model = np.linspace(0.0, 1.0, 100); 
 
 y_model = []; 
@@ -134,21 +138,25 @@ y_real = origFunc(x_real);
 
 examples, targets = zip(*list(data()))
 
-plt.close(); 
 
-plt.figure(1); 
+# In[6]:
 
 fig, ax = plt.subplots(1,1)
 fig.set_size_inches(5, 3)
-plt.plot(x_real, y_real, 'b-', x_model, y_model, 'r--', np.array(examples), np.array(targets), 'go')
+plt.plot(x_real, y_real, 'b-',label='sine')
+plt.plot(x_model, y_model, 'r--', label='regression')
+plt.plot(np.array(examples), np.array(targets), 'go', label="data");
 plt.xlim([0.0, 1.0])
 plt.ylim([-1.2, 1.2])
 ax.set_xlabel('x')
 ax.set_ylabel('y').set_rotation(0)
 plt.title('Gaussian RBF Regression of Sine Wave')
 plt.tight_layout()
+plt.legend(loc=9, bbox_to_anchor=(0.5, -0.1), ncol=3)
+plt.show()
 
-plt.figure(2); 
+
+# In[7]:
 
 fig, ax = plt.subplots(1,1)
 fig.set_size_inches(5, 3)
@@ -158,12 +166,19 @@ plt.xlim([0.0,1.0]);
 plt.ylim([-2,2]); 
 plt.title('Individual Gaussian Curves')
 plt.tight_layout()
+ax.autoscale(enable=True, axis='y', tight=False)
 
 x_gauss = np.linspace(0.0, 1.0, 100); 
 for k in range(M):
 	with sess.as_default():
 		y_gauss = np.asscalar(w[0][k]) * gaussian(x_gauss, mu[0][k], sigma[0][k]).eval() + b;
-	plt.plot(x_gauss, y_gauss); 
+		lab = "w=%0.3f, mu=%0.3f, sig=%0.3f" % (np.asscalar(w[0][k]), np.asscalar(mu[0][k]), np.asscalar(sigma[0][k]));
+	plt.plot(x_gauss, y_gauss, label=lab);
+plt.legend(loc=9, bbox_to_anchor=(0.5,-0.1), ncol=2)
 plt.show(); 
 
-input();
+
+# In[ ]:
+
+
+
