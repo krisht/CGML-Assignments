@@ -29,7 +29,7 @@ muNoise = 0
 
 #Floating functions 
 
-def origFunc(x):
+def f(x):
 	return np.sin(2 * np.pi * x);
 
 def gaussian(x, mu, sigma):
@@ -38,7 +38,7 @@ def gaussian(x, mu, sigma):
 def data():
     for _ in range(N):
         x = np.random.uniform()
-        y  = origFunc(x) + np.random.normal(loc = muNoise, scale = sigmaNoise)
+        y  = f(x) + np.random.normal(loc = muNoise, scale = sigmaNoise)
         yield x, y
 
 def defVariable(shape, name):
@@ -134,7 +134,7 @@ for a in x_model:
 y_model = np.array(y_model); 
 
 x_real = np.linspace(0.0, 1.0, 100); 
-y_real = origFunc(x_real);  
+y_real = f(x_real);  
 
 examples, targets = zip(*list(data()))
 
@@ -176,9 +176,3 @@ for k in range(M):
 	plt.plot(x_gauss, y_gauss, label=lab);
 plt.legend(loc=9, bbox_to_anchor=(0.5,-0.1), ncol=2)
 plt.show(); 
-
-
-# In[ ]:
-
-
-
