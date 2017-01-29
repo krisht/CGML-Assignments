@@ -40,6 +40,12 @@ def origFunc(x):
 def gaussian(x, mu, sigma):
 	return tf.exp(-0.5*(x-mu)**2/sigma**2);
 
+def data():
+    for _ in range(N):
+        x = np.random.uniform()
+        y  = origFunc(x) + np.random.normal(loc = muNoise, scale = sigmaNoise)
+        yield x, y
+
 def defVariable(shape, name):
         var = tf.get_variable(name=name,
                                    dtype=tf.float32,
@@ -86,10 +92,9 @@ class GaussianRDFModel():
     def iterateTrainer(self, step, x, y):
         loss, _ = self.sess.run([self.loss,self.optim],
                                           feed_dict={self.x : x, self.y : y})
-        if step % 20 == 0: 
-        	print('Step: {} \t Loss: {}'.format(step, loss))
-
-        
+        #if step % 20 == 0: 
+        	#print('Step: {} \t Loss: {}'.format(step, loss))
+     
     def train(self):
         for step in range(self.iterations+1):
             for x, y in self.data():
@@ -99,12 +104,6 @@ class GaussianRDFModel():
     	y = np.asscalar(self.sess.run(self.yhat, feed_dict={self.x : x}))
     	#print(x, y);
     	return y; 
-
-def data():
-    for _ in range(N):
-        x = np.random.uniform()
-        y  = origFunc(x) + np.random.normal(loc = muNoise, scale = sigmaNoise)
-        yield x, y
 
 sess = tf.Session()
 model = GaussianRDFModel(sess, data, iterations=runs, learnRate=rateLearn, gamma=regConst)
@@ -135,22 +134,28 @@ y_real = origFunc(x_real);
 
 examples, targets = zip(*list(data()))
 
+plt.close(); 
+
+plt.figure(1); 
+
 fig, ax = plt.subplots(1,1)
 fig.set_size_inches(5, 3)
-plt.plot(x_real, y_real, '-', x_model, y_model, '-', np.array(examples), np.array(targets), 'o')
+plt.plot(x_real, y_real, 'b-', x_model, y_model, 'r--', np.array(examples), np.array(targets), 'go')
 plt.xlim([0.0, 1.0])
 plt.ylim([-1.2, 1.2])
 ax.set_xlabel('x')
 ax.set_ylabel('y').set_rotation(0)
 plt.title('Gaussian RBF Regression of Sine Wave')
 plt.tight_layout()
-plt.show(); 
 
+plt.figure(2); 
 
 fig, ax = plt.subplots(1,1)
 fig.set_size_inches(5, 3)
 ax.set_xlabel('x')
 ax.set_ylabel('y').set_rotation(0)
+plt.xlim([0.0,1.0]);
+plt.ylim([-2,2]); 
 plt.title('Individual Gaussian Curves')
 plt.tight_layout()
 
@@ -161,4 +166,4 @@ for k in range(M):
 	plt.plot(x_gauss, y_gauss); 
 plt.show(); 
 
-# plt.savefig('plot.pdf', format='pdf', bbox_inches='tight')
+input();
