@@ -1,12 +1,9 @@
-
-# coding: utf-8
-
-# # Program for Gaussian Radial Basis Function Regression
-# ## Krishna Thiyagarajan
-# ## ECE - 411 - Computational Graphs for Machine Learning
-# ## Professor Chris Curro
-# ## Homework Assignment #1
-# ## January 29, 2017
+# Program for Gaussian Radial Basis Function Regression
+# Krishna Thiyagarajan
+# ECE - 411 - Computational Graphs for Machine Learning
+# Professor Chris Curro
+# Assignment #1
+# January 29, 2017
 
 # In[1]:
 
@@ -19,20 +16,18 @@ warnings.filterwarnings('ignore')
 
 N = 50; # Number of samples
 #Hyper parameters
-M = 6;
-runs = 100; 
-rateLearn = 1e-2;
-regConst = 0; 
-sigmaNoise = 0.1
-muNoise = 0
+M = 6; # Six gaussian curves
+runs = 100; # Number of iterations
+rateLearn = 1e-2; # Learn rate for training
+regConst = 0;  # Ignore regualarization for now
+sigmaNoise = 0.1 # Noise on data
+muNoise = 0 # Noise is centered around original data
 
 
 # In[2]:
 
-#Floating functions 
-
 def f(x):
-	return np.sin(2 * np.pi * x);
+	return np.sin(2*np.pi*x); 
 
 def gaussian(x, mu, sigma):
 	return tf.exp(-0.5*(x-mu)**2/sigma**2);
@@ -47,10 +42,11 @@ def defVariable(shape, name):
         var = tf.get_variable(name=name,
                                    dtype=tf.float32,
                                    shape=shape,
-                                   initializer=tf.random_uniform_initializer(minval=-1.5, maxval=1.5)
+                                   initializer=tf.random_uniform_initializer(minval=-1, maxval=1) 
+                              #Works better as U(-1,1) as oppoed to N(0, 0.1)
         )
         tf.add_to_collection('modelVars', var)
-        tf.add_to_collection('l2', tf.reduce_sum(tf.pow(var,2)))
+        tf.add_to_collection('l2', tf.reduce_sum(tf.square(var)))
         return var
 
 
@@ -73,11 +69,7 @@ class GaussianRBFModel():
         mu = defVariable([M,1], 'mu')
         sigma = defVariable([M,1], 'sigma')
         b = defVariable([], 'b')
-        phiArr = np.array([])
-
-        for k in range(M):
-        	phiArr = np.append(phiArr, gaussian(self.x, mu[k], sigma[k]));
-        phi = tf.stack(phiArr.tolist()); 
+        phi = gaussian(self.x, mu, sigma)
 
         self.yhat = b + tf.matmul(w, phi); 
         self.mse = tf.reduce_mean(0.5*tf.square(self.yhat - self.y))
@@ -169,6 +161,7 @@ plt.ylim([-2,2]);
 plt.title('Gaussian Basis Curves')
 plt.tight_layout()
 ax.autoscale(enable=True, axis='y', tight=False)
+#Auto scaled to visualize all functions between (0,1)
 
 x_gauss = np.linspace(0.0, 1.0, 100); 
 for k in range(M):
@@ -176,6 +169,12 @@ for k in range(M):
 		y_gauss = np.asscalar(w[0][k]) * gaussian(x_gauss, mu[0][k], sigma[0][k]).eval();
 		lab = "w=%0.3f, mu=%0.3f, sig=%0.3f" % (np.asscalar(w[0][k]), np.asscalar(mu[0][k]), np.asscalar(sigma[0][k]));
 	plt.plot(x_gauss, y_gauss, label=lab);
-plt.plot(x_gauss, np.full(shape=x_gauss.shape, fill_value=b),label="bias, b=%0.3f" % b);
+plt.plot(x_gauss, np.full(shape=x_gauss.shape, fill_value=b),label="bias, b=%0.3f" % b); # Include bias in graph
 plt.legend(loc=9, bbox_to_anchor=(0.5,-0.2), ncol=2)
 plt.show(); 
+
+
+# In[ ]:
+
+
+
