@@ -1,9 +1,12 @@
-# Program for Gaussian Radial Basis Function Regression
-# Krishna Thiyagarajan
-# ECE - 411 - Computational Graphs for Machine Learning
-# Professor Chris Curro
-# Assignment #1
-# January 29, 2017
+
+# coding: utf-8
+
+# # Program for Gaussian Radial Basis Function Regression
+# ## Krishna Thiyagarajan
+# ## ECE - 411 - Computational Graphs for Machine Learning
+# ## Professor Chris Curro
+# ## Homework Assignment #1
+# ## January 29, 2017
 
 # In[1]:
 
@@ -12,6 +15,8 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import warnings
+from IPython.display import Image
+from IPython.core.display import HTML 
 warnings.filterwarnings('ignore')
 
 N = 50; # Number of samples
@@ -172,6 +177,28 @@ for k in range(M):
 plt.plot(x_gauss, np.full(shape=x_gauss.shape, fill_value=b),label="bias, b=%0.3f" % b); # Include bias in graph
 plt.legend(loc=9, bbox_to_anchor=(0.5,-0.2), ncol=2)
 plt.show(); 
+
+
+# ## Sample Previous Runs
+
+# In[8]:
+
+Image(url= "./regression1.png")
+
+
+# In[9]:
+
+Image(url="./basis1.png")
+
+
+# In[10]:
+
+Image(url="./regression2.png")
+
+
+# In[11]:
+
+Image(url= "./basis2.png")
 
 
 # In[ ]:
