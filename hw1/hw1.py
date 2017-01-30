@@ -14,6 +14,8 @@ import tensorflow as tf
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings('ignore')
 
 N = 50; # Number of samples
 #Hyper parameters
@@ -152,7 +154,7 @@ ax.set_xlabel('x')
 ax.set_ylabel('y').set_rotation(0)
 plt.title('Gaussian RBF Regression of Sine Wave')
 plt.tight_layout()
-plt.legend(loc=9, bbox_to_anchor=(0.5, -0.1), ncol=3)
+plt.legend(loc=9, bbox_to_anchor=(0.5, -0.2), ncol=3)
 plt.show()
 
 
@@ -164,15 +166,16 @@ ax.set_xlabel('x')
 ax.set_ylabel('y').set_rotation(0)
 plt.xlim([0.0,1.0]);
 plt.ylim([-2,2]); 
-plt.title('Individual Gaussian Curves')
+plt.title('Gaussian Basis Curves')
 plt.tight_layout()
 ax.autoscale(enable=True, axis='y', tight=False)
 
 x_gauss = np.linspace(0.0, 1.0, 100); 
 for k in range(M):
 	with sess.as_default():
-		y_gauss = np.asscalar(w[0][k]) * gaussian(x_gauss, mu[0][k], sigma[0][k]).eval() + b;
+		y_gauss = np.asscalar(w[0][k]) * gaussian(x_gauss, mu[0][k], sigma[0][k]).eval();
 		lab = "w=%0.3f, mu=%0.3f, sig=%0.3f" % (np.asscalar(w[0][k]), np.asscalar(mu[0][k]), np.asscalar(sigma[0][k]));
 	plt.plot(x_gauss, y_gauss, label=lab);
-plt.legend(loc=9, bbox_to_anchor=(0.5,-0.1), ncol=2)
+plt.plot(x_gauss, np.full(shape=x_gauss.shape, fill_value=b),label="bias, b=%0.3f" % b);
+plt.legend(loc=9, bbox_to_anchor=(0.5,-0.2), ncol=2)
 plt.show(); 
