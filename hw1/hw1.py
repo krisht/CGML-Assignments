@@ -19,9 +19,9 @@ from IPython.display import Image
 from IPython.core.display import HTML 
 warnings.filterwarnings('ignore')
 
-N = 50; # Number of samples
+N = 100; # Number of samples
 #Hyper parameters
-M = 6; # Six gaussian curves
+M = 2; # Six gaussian curves
 runs = 100; # Number of iterations
 rateLearn = 1e-2; # Learn rate for training
 regConst = 0;  # Ignore regualarization for now
@@ -32,7 +32,7 @@ muNoise = 0 # Noise is centered around original data
 # In[2]:
 
 def f(x):
-	return np.sin(2*np.pi*x); 
+	return x-1; 
 
 def gaussian(x, mu, sigma):
 	return tf.exp(-0.5*(x-mu)**2/sigma**2);
