@@ -23,8 +23,8 @@ def dataTrain():
     for _ in range(trainSamples):
         t=np.random.uniform(low=0, high=4*np.pi)
         p=np.random.randint(0, high=2)
-        x1=t*np.cos(t+p*np.pi) + np.random.normal(scale=0.01)
-        x2=t*np.sin(t+p*np.pi) + np.random.normal(scale=0.01)
+        x1=t*np.cos(t+p*np.pi)
+        x2=t*np.sin(t+p*np.pi)
         y =p
         ynot = 1 - p
         yield x1, x2, y, ynot
@@ -33,7 +33,7 @@ def defWeight(shape, name):
     var = tf.get_variable(name=name,
                           dtype=tf.float32,
                           shape=shape,
-                          initializer=tf.random_uniform_initializer(minval=-1, maxval=1)
+                          initializer=tf.random_uniform_initializer(minval=-1/np.sqrt(2), maxval=1/np.sqrt(2))
                           # Works better as U(-1,1) as oppoed to N(0, 0.1)
                           )
     tf.add_to_collection('modelVars', var)
@@ -80,32 +80,36 @@ class MultiLayerPercepModel:
 
         self.yhat = tf.sigmoid(self.yhat);
 
-        self.costs = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = self.yhat, labels = self.y));
+        self.costs = -tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits = self.yhat, targets=self.y))
         self.l2_penalty = tf.reduce_sum(tf.get_collection('l2'))
         self.loss = self.costs + self.gamma * self.l2_penalty
 
     def initTrainer(self):
         modelVars = tf.get_collection('modelVars')
-        self.optim = (tf.train.AdamOptimizer(learning_rate=self.learnRate).minimize(self.loss, var_list = modelVars))
+        self.optim = (tf.train.GradientDescentOptimizer(learning_rate=self.learnRate).minimize(self.loss, var_list = modelVars))
 
         self.sess.run(tf.global_variables_initializer())
 
     def iterateTrain(self, step,  x, y):
         loss = self.sess.run(self.loss, feed_dict={self.x: np.transpose(np.asarray(x)), self.y: np.transpose(y)})
-        print("Step: {}, Loss: {}".format(step, loss))
+        if step % displaySteps ==0:
+            pass#print("Step: {}, Loss: {}".format(step, loss))
 
     def train(self):
         for kk in range(self.iterations):
-            for x1, x2, y, ynot in self.data:
-                self.iterateTrain(kk, [[x1],[x2]], [[y],[ynot]])
+            for x1, x2, y, ynot in self.data():
+                self.iterateTrain(kk, [[x1], [x2]], [[y], [ynot]])
 
     def infer(self, x):
-        y = np.asscalar(self.sess.run(self.yhat, feed_dict={self.x: x}))
+        y = self.sess.run(self.yhat, feed_dict={self.x: np.transpose(np.asarray(x))})
         return y; 
 
 sess = tf.Session()
-model = MultiLayerPercepModel(sess = sess, data = dataTrain(), iterations=runs, learnRate=rateLearn, gamma=regConst, layers=layers)
+model = MultiLayerPercepModel(sess = sess, data = dataTrain, iterations=runs, learnRate=rateLearn, gamma=regConst, layers=layers)
 model.initTrainer()
 model.train()
 
 print(tf.get_collection('modelVars'))
+
+
+print(model.infer([[0.55], [0.6]])); 
