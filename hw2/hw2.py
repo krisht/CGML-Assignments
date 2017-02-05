@@ -9,13 +9,12 @@
 
 # In[1]:
 
-import tensorflow as tf
-import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
 import warnings
+
+import matplotlib.pyplot as plt
+import numpy as np
+import tensorflow as tf
 from IPython.display import Image
-from IPython.core.display import HTML
 
 warnings.filterwarnings('ignore')
 
@@ -26,10 +25,43 @@ batchSize = 1000
 regConst = 1e-3
 displaySteps = 10
 
+totalSamples = 1000
+trainSamples = 700
+
 layers = [2, 256, 256, 1] # First num is num of inputs, last num is num of outputs
 
 
-class MultiLayerPercepModel():
+def dataTrain():
+    for _ in range(trainSamples):
+        t=np.random.uniform(low = 0, high=4*np.pi);
+        p=np.random.randint(0,high=2);
+        x1=t*np.cos(t+p*np.pi) + np.random.normal(scale=0.01);
+        x2=t*np.sin(t+p*np.pi)+ np.random.normal(scale=0.01);
+        y = p;
+        yield x1,x2,y;
+
+def dataTest():
+    for _ in range(totalSamples - trainSamples):
+        t=np.random.uniform(low = 0, high=4*np.pi);
+        p=np.random.randint(0,high=2);
+        x1=t*np.cos(t+p*np.pi) + np.random.normal(scale=0.01);
+        x2=t*np.sin(t+p*np.pi)+ np.random.normal(scale=0.01);
+        y = p;
+        yield x1,x2,y;
+
+
+def defVariable(shape, name):
+    var = tf.get_variable(name=name,
+                          dtype=tf.float32,
+                          shape=shape,
+                          initializer=tf.random_uniform_initializer(minval=-1, maxval=1)
+                          # Works better as U(-1,1) as oppoed to N(0, 0.1)
+                          )
+    tf.add_to_collection('modelVars', var)
+    tf.add_to_collection('l2', tf.reduce_sum(tf.square(var)))
+    return var
+
+class MultiLayerPercepModel:
     def __init__(self, sess, data, layers, iterations, learnRate, gamma):
         self.sess = sess
         self.data = data
@@ -41,51 +73,47 @@ class MultiLayerPercepModel():
 
     def buildModel(self):
 
-        self.x = tf.placeholder(tf.float32, shape=[None, self.inputs])
-        self.y = tf.placeholder(tf.float32, shape =[None, self.classes])
+        self.x = tf.placeholder(tf.float32, shape=[None, self.layers[0]])
+        self.y = tf.placeholder(tf.float32, shape =[None, self.layers[len(self.layers)-1]])
 
         weights = {}
 
         biases = {}
 
         for ii in range(0, len(self.layers)):
-            weights['h%d' % ii] = tf.Variable(tf.random_normal([self.layers[ii], self.layers[ii+1]]))
+            weights[ii] = defVariable(name = 'w%d' % ii, shape = [self.layers[ii], self.layers[ii+1]])
 
-        for ii in range(0, len(self.layers):
-            biases['b%d' % ii]  tf.Variable(tf.random_normal([self.layers[ii+1]]))
+        for ii in range(0, len(self.layers)):
+            biases[ii] = defVariable(name = 'b%d' % ii, shape = [self.layers[ii+1]]);
 
-        yhat = tf.add(tf.matmul(self.x, weights['h0']), biases['b0']);
+        self.yhat = tf.nn.relu(tf.add(tf.matmul(self.x, weights['h0']), biases['b0']))
 
-        for ii in range(1, len(self.layers)):
-            yhat = tf.add(tf.matmul(self.x, weights['h%d' % ii]), biases['b%d'%ii]);
+        for ii in range(1, len(self.layers)-1):
+            self.yhat = tf.relu(tf.add(tf.matmul(self.yhat, weights['h%d' % ii]), biases['b%d'%ii]));
 
-        self.mse = tf.reduce_mean('''blah'''));
-        self.l2_penalty = tf.reduce_sum(tf.get_collection('l2'));
-        self.loss = self.mse + self.gamma * self.l2_penalty;
+        self.yhat = tf.sigmoid(tf.add(tf.matmul(self.yhat, weights['h%d'% (len(self.layers)-1)]), biases['b%d' % (len(
+            self.layers)-1)]));
+
+        self.costs = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = self.yhat, labels = self.y));
+        self.l2_penalty = tf.reduce_sum(tf.get_collection('l2'))
+        self.loss = self.costs + self.gamma * self.l2_penalty
 
     def initTrainer(self):
         modelVars = tf.get_collection('modelVars')
-        self.optim = (
-        tf.train.GradientDescentOptimizer(learning_rate=self.learnRate).minimize(self.loss, var_list=modelVars))
+        self.optim = (tf.train.GradientDescentOptimizer(learning_rate=self.learnRate).minimize(self.loss, var_list =
+        modelVars))
+
         self.sess.run(tf.global_variables_initializer())
 
-    def iterateTrainer(self, step, x, y):
-        loss, _ = self.sess.run([self.loss, self.optim],
-                                feed_dict={self.x: x, self.y: y})
-        # if step % 20 == 0:
+    def iterateTrain(self, x1, x2, y):
+        loss = self.sess.run(self.loss, feed_dict={self.x : [x1, x2], self.y=y})
 
-    # print('Step: {} \t Loss: {}'.format(step, loss))
+        print("Loss: {}".format(loss)); 
 
     def train(self):
-        for run in self.iterations:
-            avg_cost = 0;
-            total_batch = #get the data
-
-            for ii in range(total_batch):
-                batch_x, batch_y =
-        for step in range(self.iterations + 1):
-            for x, y in self.data():
-                self.iterateTrainer(step, x, y)
+        for _ in range(self.iterations):
+            for x1, x2, y, in self.data():
+                self.train_iter(x1,x2,y);
 
     def infer(self, x):
         y = np.asscalar(self.sess.run(self.yhat, feed_dict={self.x: x}))
@@ -93,96 +121,22 @@ class MultiLayerPercepModel():
         return y;
 
 
-sess = tf.Session()
-model = MultiLayerPercepModel(sess = sess, data = data, iterations=runs, learnRate=rateLearn, gamma=regConst)
-model.initTrainer()
-model.train()
+# sess = tf.Session()
+# model = MultiLayerPercepModel(sess = sess, data = data(), iterations=runs, learnRate=rateLearn, gamma=regConst)
+# model.initTrainer()
+# model.train()
 
-with tf.variable_scope("", reuse=True):
-    w = sess.run(tf.get_variable("w"))
-    mu = sess.run(tf.transpose(tf.get_variable("mu")))
-    sigma = sess.run(tf.transpose(tf.get_variable("sigma")))
-    b = sess.run(tf.get_variable("b"));
 
-print("W =", w);
-print("μ =", mu);
-print("σ =", sigma);
-print("b =", b);
 
-# In[5]:
+x1,x2,y = zip(*dataTrain());
 
-x_model = np.linspace(0.0, 1.0, 100);
-
-y_model = [];
-
-for a in x_model:
-    y_model.append(model.infer(a));
-y_model = np.array(y_model);
-
-x_real = np.linspace(0.0, 1.0, 100);
-y_real = f(x_real);
-
-examples, targets = zip(*list(data()))
-
-# In[6]:
-
-fig, ax = plt.subplots(1, 1)
-fig.set_size_inches(5, 3)
-plt.plot(x_real, y_real, 'b-', label='sine')
-plt.plot(x_model, y_model, 'r--', label='regression')
-plt.plot(np.array(examples), np.array(targets), 'go', label="data");
-plt.xlim([0.0, 1.0])
-plt.ylim([-1.2, 1.2])
-ax.set_xlabel('x')
+fig, ax = plt.subplots(1,1)
+fig.set_size_inches(5,3)
+plt.plot(x1,x2, 'o')
+plt.xlim([-2.1,2.1])
+plt.ylim([-2.1,2.1])
+ax.set_xlabel('x');
 ax.set_ylabel('y').set_rotation(0)
-plt.title('Gaussian RBF Regression of Sine Wave')
-plt.tight_layout()
-plt.legend(loc=9, bbox_to_anchor=(0.5, -0.2), ncol=3)
+plt.title('Curves');
+plt.tight_layout();
 plt.show()
-
-# In[7]:
-
-fig, ax = plt.subplots(1, 1)
-fig.set_size_inches(5, 3)
-ax.set_xlabel('x')
-ax.set_ylabel('y').set_rotation(0)
-plt.xlim([0.0, 1.0]);
-plt.ylim([-2, 2]);
-plt.title('Gaussian Basis Curves')
-plt.tight_layout()
-ax.autoscale(enable=True, axis='y', tight=False)
-# Auto scaled to visualize all functions between (0,1)
-
-x_gauss = np.linspace(0.0, 1.0, 100);
-for k in range(M):
-    with sess.as_default():
-        y_gauss = np.asscalar(w[0][k]) * gaussian(x_gauss, mu[0][k], sigma[0][k]).eval();
-        lab = "w=%0.3f, mu=%0.3f, sig=%0.3f" % (np.asscalar(w[0][k]), np.asscalar(mu[0][k]), np.asscalar(sigma[0][k]));
-    plt.plot(x_gauss, y_gauss, label=lab);
-plt.plot(x_gauss, np.full(shape=x_gauss.shape, fill_value=b), label="bias, b=%0.3f" % b);  # Include bias in graph
-plt.legend(loc=9, bbox_to_anchor=(0.5, -0.2), ncol=2)
-plt.show();
-
-# ## Sample Previous Runs
-
-# In[8]:
-
-Image(url="./regression1.png")
-
-# In[9]:
-
-Image(url="./basis1.png")
-
-# In[10]:
-
-Image(url="./regression2.png")
-
-# In[11]:
-
-Image(url="./basis2.png")
-
-
-# In[ ]:
-
-
-
