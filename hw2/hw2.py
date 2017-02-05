@@ -8,10 +8,10 @@ import tensorflow as tf
 
 warnings.filterwarnings('ignore')
 
-rateLearn = 1e-2
-runs=50
+rateLearn = 1e-3
+runs=100
 batchSize=1000
-regConst=1e-3
+regConst=1e-5
 displaySteps=10
 
 totalSamples=1000
@@ -86,19 +86,18 @@ class MultiLayerPercepModel:
 
     def initTrainer(self):
         modelVars = tf.get_collection('modelVars')
-        self.optim = (tf.train.GradientDescentOptimizer(learning_rate=self.learnRate).minimize(self.loss, var_list = modelVars))
+        self.optim = (tf.train.AdamOptimizer(learning_rate=self.learnRate).minimize(self.loss, var_list = modelVars))
 
         self.sess.run(tf.global_variables_initializer())
 
-    def iterateTrain(self, x, y):
-
+    def iterateTrain(self, step,  x, y):
         loss = self.sess.run(self.loss, feed_dict={self.x: np.transpose(np.asarray(x)), self.y: np.transpose(y)})
-        print("Loss: {}".format(loss))
+        print("Step: {}, Loss: {}".format(step, loss))
 
     def train(self):
-        for _ in range(self.iterations):
+        for kk in range(self.iterations):
             for x1, x2, y, ynot in self.data:
-                self.iterateTrain([[x1],[x2]], [[y],[ynot]])
+                self.iterateTrain(kk, [[x1],[x2]], [[y],[ynot]])
 
     def infer(self, x):
         y = np.asscalar(self.sess.run(self.yhat, feed_dict={self.x: x}))
