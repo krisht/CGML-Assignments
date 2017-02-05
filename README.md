@@ -4,4 +4,4 @@
 hw1 - Gaussian Radial Basis Functions Regression of a Sine Wave
 
 
-hw2 - Binary Classification of a $r=\theta$ and $r=\theta + \phi$ wave using Neural Network
+hw2 - Binary classification of two angularly shifted spirals using neural networks
