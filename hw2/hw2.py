@@ -26,7 +26,8 @@ def dataTrain():
         x1=t*np.cos(t+p*np.pi) + np.random.normal(scale=0.01)
         x2=t*np.sin(t+p*np.pi) + np.random.normal(scale=0.01)
         y =p
-        yield x1, x2, y
+        ynot = 1 - p
+        yield x1, x2, y, ynot
 
 def defVariable(shape, name):
     var = tf.get_variable(name=name,
@@ -79,13 +80,14 @@ class MultiLayerPercepModel:
         self.sess.run(tf.global_variables_initializer())
 
     def iterateTrain(self, x, y):
-        loss = self.sess.run(self.loss, feed_dict={self.x: x, self.y: y})
+
+        loss = self.sess.run(self.loss, feed_dict={self.x: np.transpose(np.asarray(x)), self.y: np.transpose(y)})
         print("Loss: {}".format(loss))
 
     def train(self):
         for _ in range(self.iterations):
-            for x1, x2, y in self.data:
-                self.iterateTrain([x1, x2], y)
+            for x1, x2, y, ynot in self.data:
+                self.iterateTrain([[x1],[x2]], [[y],[ynot]])
 
     def infer(self, x):
         y = np.asscalar(self.sess.run(self.yhat, feed_dict={self.x: x}))
