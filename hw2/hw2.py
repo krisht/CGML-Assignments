@@ -17,7 +17,7 @@ displaySteps=10
 totalSamples=1000
 trainSamples=700
 
-layers = [2, 256, 256, 2]
+layers = [2, 4, 8, 16, 32, 32, 16, 8, 4, 2]
 
 def dataTrain():
     for _ in range(trainSamples):
@@ -29,11 +29,22 @@ def dataTrain():
         ynot = 1 - p
         yield x1, x2, y, ynot
 
-def defVariable(shape, name):
+def defWeight(shape, name):
     var = tf.get_variable(name=name,
                           dtype=tf.float32,
                           shape=shape,
                           initializer=tf.random_uniform_initializer(minval=-1, maxval=1)
+                          # Works better as U(-1,1) as oppoed to N(0, 0.1)
+                          )
+    tf.add_to_collection('modelVars', var)
+    tf.add_to_collection('l2', tf.reduce_sum(tf.square(var)))
+    return var
+
+def defBias(shape, name):
+    var = tf.get_variable(name=name,
+                          dtype=tf.float32,
+                          shape=shape,
+                          initializer=tf.random_normal_initializer(stddev=0.1)
                           # Works better as U(-1,1) as oppoed to N(0, 0.1)
                           )
     tf.add_to_collection('modelVars', var)
@@ -58,10 +69,10 @@ class MultiLayerPercepModel:
         biases = {}
 
         for ii in range(0, len(self.layers)-1):
-            weights[ii] = defVariable(name='w%d' % ii, shape = [self.layers[ii], self.layers[ii+1]])
+            weights[ii] = defWeight(name='w%d' % ii, shape = [self.layers[ii], self.layers[ii+1]])
 
         for ii in range(0, len(self.layers)-1):
-            biases[ii] = defVariable(name='b%d' % ii, shape = [self.layers[ii+1]])
+            biases[ii] = defBias(name='b%d' % ii, shape = [self.layers[ii+1]])
         self.yhat = tf.nn.relu(tf.add(tf.matmul(self.x, weights[0]), biases[0]))
 
         for ii in range(1, len(self.layers)-1):
