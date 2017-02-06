@@ -15,6 +15,8 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+from IPython.display import Image
+from IPython.core.display import HTML
 
 warnings.filterwarnings('ignore')
 
@@ -41,11 +43,12 @@ layers = [2, 20, 40, 20, 2]
 # Data generation function
 
 def data(n):
-    t = np.random.uniform(low = 0.0, high = 2* np.pi, size=n)
+    t = np.random.uniform(low=0.0, high=2 * np.pi, size=n)
     c = np.random.randint(0, high=2, size=n)
     x = t * np.cos(t + c * np.pi) + np.random.normal(0, noiseSigma, n)
     y = t * np.sin(t + c * np.pi) + np.random.normal(0, noiseSigma, n)
     return x, y, c
+
 
 # Function to help declaring variables in model
 
@@ -108,7 +111,7 @@ class MultiLayerPercepModel:
             avgCost = 0
             for x, y, c in zip(xSamp, ySamp, cSamp):
                 inputs = np.expand_dims(np.asarray([x, y]), axis=1)
-                outputs = np.reshape([float(1-c), float(c)], (1, 2))
+                outputs = np.reshape([float(1 - c), float(c)], (1, 2))
                 avgCost += self.iterateTrainer(inputs, outputs) / len(xSamp)
             if step % displaySteps == 0:
                 print("Step: {:4d}, Loss: {:.9f}".format(step, avgCost))
@@ -139,14 +142,13 @@ infer = np.array([])
 for x, y, _ in zip(xTest, yTest, cTest):
     infer = np.append(infer, model.inferClass(x, y))
 
-
 # Thanks to Sahil Patel for hinting me towards contours
 domain = np.arange(-7, 7, 0.1)
 xCont, yCont = np.meshgrid(domain, domain)
 prob = np.vectorize(model.inferProb)
 zCont = prob(xCont, yCont)
 
-accuracy = np.sum(np.equal(cTest,infer))*100/numTest
+accuracy = np.sum(np.equal(cTest, infer)) * 100 / numTest
 
 print("Accuracy: {}%".format(accuracy))
 
@@ -161,9 +163,36 @@ plt.xlabel('x')
 plt.ylabel('y', rotation=0)
 plt.title('Prediction with Accuracy {}%'.format(accuracy))
 plt.plot(xTest[infer == True], yTest[infer == True], 'ro', label='Class 1')
-plt.plot(xTest[infer == False], yTest[infer == False], 'bo', label = 'Class 2')
-plt.legend(loc=9, bbox_to_anchor=(0.5,-0.2), ncol=3)
+plt.plot(xTest[infer == False], yTest[infer == False], 'bo', label='Class 2')
+plt.legend(loc=9, bbox_to_anchor=(0.5, -0.2), ncol=3)
 plt.show()
+
+
+# ## Sample Previous Runs
+
+# In[5]:
+
+Image(url= "./figure_1.png")
+
+
+# In[6]:
+
+Image(url= "./figure_2.png")
+
+
+# In[7]:
+
+Image(url= "./figure_3.png")
+
+
+# In[8]:
+
+Image(url= "./figure_4.png")
+
+
+# In[9]:
+
+Image(url= "./figure_5.png")
 
 
 # In[ ]:
