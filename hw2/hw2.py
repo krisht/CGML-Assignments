@@ -23,7 +23,7 @@ warnings.filterwarnings('ignore')
 # Hyper Parameters
 
 rateLearn = 1e-3
-runs = 200
+runs = 300
 regConst = 1e-5
 displaySteps = 20
 
@@ -156,7 +156,7 @@ print("Accuracy: {}%".format(accuracy))
 # In[4]:
 
 plt.figure()
-bound = plt.contour(xCont, yCont, zCont, levels=[0.5])
+bound = plt.contour(xCont, yCont, zCont, levels=[0.023, 0.5, .977])
 plt.clabel(bound, inline=1, fontsize=10)
 
 plt.xlabel('x')
